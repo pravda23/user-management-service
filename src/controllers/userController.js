@@ -2,17 +2,22 @@ const User = require("../models/userModel");
 const bcrypt = require("bcrypt");
 const jwt = require("jsonwebtoken");
 
-console.log(process.env.JWT_SECRET);
-
 // Register a new user
 exports.registerUser = async (req, res) => {
   const { username, email, password } = req.body;
+  console.log("Request body: ", req.body);
+  if (!username || !email || !password) {
+    return res.status(400).json({ error: "All fields are required." });
+  }
+
   try {
     const hashedPassword = await bcrypt.hash(password, 10);
     const newUser = new User({ username, email, password: hashedPassword });
     await newUser.save();
     res.status(201).json({ message: "User registered successfully." });
   } catch (error) {
+    console.error("Registration error: ", error);
+    console.log("error");
     res.status(500).json({ error: "Registration failed." });
   }
 };
@@ -29,7 +34,7 @@ exports.loginUser = async (req, res) => {
     const token = jwt.sign(
       { id: user._id },
       process.env.JWT_SECRET || "secret",
-      { expiresIn: "1h" }
+      { expiresIn: "1h" },
     );
     res.status(200).json({ token });
   } catch (error) {
